@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -13,10 +14,10 @@ const (
 	Cash       PaymentMethod = "Cash"
 )
 
-// var validPaymentMethods = map[PaymentMethod]bool{
-// 	CreditCard: true,
-// 	Cash:       true,
-// }
+var validPaymentMethods = map[PaymentMethod]bool{
+	CreditCard: true,
+	Cash:       true,
+}
 
 type Order struct {
 	gorm.Model
@@ -28,9 +29,9 @@ type Order struct {
 	PaymentMethod PaymentMethod
 }
 
-// func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
-// 	if !validPaymentMethods[o.PaymentMethod] {
-// 		return errors.New("invalid payment method")
-// 	}
-// 	return nil
-// }
+func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
+	if !validPaymentMethods[o.PaymentMethod] {
+		return errors.New("invalid payment method")
+	}
+	return nil
+}
