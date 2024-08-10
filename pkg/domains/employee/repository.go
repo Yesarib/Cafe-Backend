@@ -21,6 +21,12 @@ type repository struct {
 	db *gorm.DB
 }
 
+func NewRepository(db *gorm.DB) Repository {
+	return &repository{
+		db: db,
+	}
+}
+
 // GetEmployeeByUserName implements Repository.
 func (r *repository) GetEmployeeByUserName(c *gin.Context, userName string) (models.Employee, error) {
 	var employee models.Employee
@@ -28,12 +34,6 @@ func (r *repository) GetEmployeeByUserName(c *gin.Context, userName string) (mod
 	err := r.db.Table("employees").Where("username = ?", userName).First(&employee).Error
 
 	return employee, err
-}
-
-func NewRepository(db *gorm.DB) Repository {
-	return &repository{
-		db: db,
-	}
 }
 
 // DeleteEmployee implements Repository.

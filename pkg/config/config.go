@@ -3,6 +3,7 @@ package config
 import (
 	"cafe-backend/pkg/domains/auth"
 	"cafe-backend/pkg/domains/employee"
+	"cafe-backend/pkg/domains/product"
 	"cafe-backend/pkg/initializers"
 	"cafe-backend/pkg/models"
 	"log"
@@ -11,6 +12,7 @@ import (
 type AppConfig struct {
 	AuthService     auth.Service
 	EmployeeService employee.Service
+	ProductService  product.Service
 	// Diğer servisler...
 }
 
@@ -28,8 +30,12 @@ func NewConfig() *AppConfig {
 	employeeRepo := employee.NewRepository(initializers.DB)
 	employeeService := employee.NewService(employeeRepo)
 
+	productRepo := product.NewRepository(initializers.DB)
+	productService := product.NewService(productRepo)
+
 	return &AppConfig{
 		AuthService:     authService,
 		EmployeeService: employeeService,
+		ProductService:  productService,
 	}
 }
