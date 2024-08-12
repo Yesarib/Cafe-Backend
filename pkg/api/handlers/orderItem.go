@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"cafe-backend/pkg/domains/table"
+	orderitem "cafe-backend/pkg/domains/orderItem"
 	"cafe-backend/pkg/models"
 	"net/http"
 	"strconv"
@@ -9,46 +9,45 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TableHandler struct {
-	Service table.Service
+type OrderItemHandler struct {
+	Service orderitem.Service
 }
 
-func NewTableHandler(service table.Service) *TableHandler {
-	return &TableHandler{
+func NewOrderItemHandler(service orderitem.Service) *OrderItemHandler {
+	return &OrderItemHandler{
 		Service: service,
 	}
 }
 
-func (h *TableHandler) NewTable(c *gin.Context) {
-	var table models.Table
+func (h *OrderItemHandler) NewOrderItem(c *gin.Context) {
+	var orderItem models.OrderItem
 
-	if err := c.ShouldBindJSON(&table); err != nil {
+	if err := c.ShouldBindJSON(&orderItem); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.Service.NewTable(c, &table)
+	err := h.Service.NewOrderItem(c, &orderItem)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Table created successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Order Item created"})
 }
 
-func (h *TableHandler) GetTables(c *gin.Context) {
-	tables, err := h.Service.GetTables(c)
+func (h *OrderItemHandler) GetOrderItems(c *gin.Context) {
+	orderItems, err := h.Service.GetOrderItems(c)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, tables)
+	c.JSON(http.StatusOK, orderItems)
 }
 
-func (h *TableHandler) GetTableByID(c *gin.Context) {
+func (h *OrderItemHandler) GetOrderItemById(c *gin.Context) {
 	idStr := c.Param("id")
 
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -57,17 +56,16 @@ func (h *TableHandler) GetTableByID(c *gin.Context) {
 		return
 	}
 
-	table, err := h.Service.GetTableByID(c, uint(id))
+	orderItem, err := h.Service.GetOrderItemById(c, uint(id))
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, table)
+	c.JSON(http.StatusOK, orderItem)
 }
 
-func (h *TableHandler) UpdateTable(c *gin.Context) {
+func (h *OrderItemHandler) UpdateOrderItem(c *gin.Context) {
 	idStr := c.Param("id")
 
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -76,34 +74,36 @@ func (h *TableHandler) UpdateTable(c *gin.Context) {
 		return
 	}
 
-	var table models.Table
-	if err := c.ShouldBindJSON(&table); err != nil {
+	var orderItem models.OrderItem
+
+	if err := c.ShouldBindJSON(&orderItem); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.Service.UpdateTable(c, uint(id), table)
-
+	err = h.Service.UpdateOrderItem(c, uint(id), orderItem)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Table successfully updated"})
+	c.JSON(http.StatusOK, gin.H{"message": "Order Item successfully updated"})
+
 }
 
-func (h *TableHandler) DeleteTable(c *gin.Context) {
+func (h *OrderItemHandler) DeleteOrderItem(c *gin.Context) {
 	idStr := c.Param("id")
+
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
-	err = h.Service.DeleteTable(c, uint(id))
+	err = h.Service.DeleteOrderItem(c, uint(id))
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete table"})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Table deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Order Item deleted successfully"})
 }

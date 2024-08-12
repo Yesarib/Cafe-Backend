@@ -18,7 +18,14 @@ func main() {
 
 	r := gin.Default()
 
-	routes.RegisterRoutes(r, cfg.AuthService, cfg.EmployeeService, cfg.ProductService, cfg.TableService)
+	routes.RegisterRoutes(r,
+		cfg.AuthService,
+		cfg.EmployeeService,
+		cfg.ProductService,
+		cfg.TableService,
+		cfg.CategoryService,
+		cfg.OrderItemService,
+	)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("failed to start server: %v", err)
