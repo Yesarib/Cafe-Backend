@@ -44,9 +44,10 @@ func (h *Handler) Login(c *gin.Context) {
 
 	loginDto, err := h.Service.Login(c, &loginReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, loginDto)
+	c.SetCookie("token", loginDto.Token, 3600, "/", "localhost", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
