@@ -47,7 +47,7 @@ func (s *service) Login(c *gin.Context, req *dto.LoginReq) (dto.LoginDTO, error)
 
 	user, err := s.repository.GetUserByUserName(c, req.UserName)
 	if err != nil {
-		return loginDto, errors.New("failed login")
+		return loginDto, err
 	}
 
 	checkPassword := utils.PasswordControl(user.Password, req.Password)
@@ -55,7 +55,7 @@ func (s *service) Login(c *gin.Context, req *dto.LoginReq) (dto.LoginDTO, error)
 		return loginDto, errors.New("email or password doesnt match")
 	}
 
-	token, err := middleware.SignAccessToken(string(user.ID))
+	token, err := middleware.SignAccessToken(string(rune(user.ID)), user.Role)
 
 	if err != nil {
 		return loginDto, errors.New("there is an error when get access token")

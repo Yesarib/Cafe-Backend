@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"net/http"
 	"os"
 	"time"
 
@@ -11,12 +12,14 @@ import (
 
 type CustomClaims struct {
 	UserID string `json:"userId"`
+	Role   string
 	jwt.RegisteredClaims
 }
 
-func SignAccessToken(userId string) (string, error) {
+func SignAccessToken(userId string, role string) (string, error) {
 	claims := CustomClaims{
 		UserID: userId,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(60 * time.Second)),
 			Issuer:    "pickurpage.com",
@@ -38,7 +41,7 @@ func SignAccessToken(userId string) (string, error) {
 func VerifyAccessToken(c *gin.Context) (*CustomClaims, error) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 
 	bearerToken := authHeader[len("Bearer "):]
@@ -49,19 +52,19 @@ func VerifyAccessToken(c *gin.Context) (*CustomClaims, error) {
 
 	if err != nil {
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			return nil, errors.New("Unauthorized")
+			return nil, errors.New("unauthorized")
 		}
-		return nil, errors.New("Bad Request")
+		return nil, errors.New("bad request")
 	}
 
 	if !token.Valid {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 
 	claims, ok := token.Claims.(*CustomClaims)
 
 	if !ok {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 	return claims, nil
 }
@@ -111,4 +114,49 @@ func VerifyRefreshToken(refreshToken string) (string, error) {
 	}
 
 	return userID, nil
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		bearerToken := authHeader[len("Bearer "):]
+
+		token, err := jwt.ParseWithClaims(bearerToken, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
+		})
+
+		if err != nil {
+			if errors.Is(err, jwt.ErrSignatureInvalid) {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+				c.Abort()
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+			c.Abort()
+			return
+		}
+
+		if !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(*CustomClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", claims.UserID)
+
+		c.Next()
+	}
 }
